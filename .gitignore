@@ -1,0 +1,43 @@
+# Eclipse
+.classpath
+.project
+.settings/
+bin/
+
+# Build output
+build/
+target/
+*.class
+
+# Package Files
+*.jar
+*.war
+*.ear
+*.zip
+*.tar.gz
+*.rar
+
+# Tomcat
+Servers/
+
+# IDE
+*.iml
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Temporary files
+*.tmp
+*.bak
+*.swp
+*~.nib
+local.properties
+
+# Database
+*.db
+*.sqlite
