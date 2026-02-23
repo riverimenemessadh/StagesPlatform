@@ -9,6 +9,8 @@ public class Candidature {
     private String statut;
     private Timestamp dateCandidature;
     private String lettreMotivation;
+    private Integer quizAttemptId;
+    private Double quizScore;
     private Timestamp dateReponse;
     private String commentaireAdmin;
     
@@ -46,6 +48,14 @@ public class Candidature {
     
     public String getLettreMotivation() { return lettreMotivation; }
     public void setLettreMotivation(String lettreMotivation) { this.lettreMotivation = lettreMotivation; }
+    
+    public Integer getQuizAttemptId() { return quizAttemptId; }
+    public void setQuizAttemptId(Integer quizAttemptId) { this.quizAttemptId = quizAttemptId; }
+    
+    public Double getQuizScore() { return quizScore; }
+    public void setQuizScore(Double quizScore) { this.quizScore = quizScore; }
+    
+    public boolean hasQuizScore() { return quizScore != null; }
     
     public Timestamp getDateReponse() { return dateReponse; }
     public void setDateReponse(Timestamp dateReponse) { this.dateReponse = dateReponse; }

@@ -1,8 +1,11 @@
 package com.stages.servlet;
 
 import com.stages.dao.OffreStageDAO;
+import com.stages.dao.QuizDAO;
 import com.stages.model.OffreStage;
 import com.stages.model.Entreprise;
+import com.stages.model.Quiz;
+import com.stages.model.QuizQuestion;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.*;
@@ -13,10 +16,12 @@ import java.util.List;
 @WebServlet("/entreprise-offres")
 public class EntrepriseOffresServlet extends HttpServlet {
     private OffreStageDAO offreStageDAO;
+    private QuizDAO quizDAO;
     
     @Override
     public void init() {
         offreStageDAO = new OffreStageDAO();
+        quizDAO = new QuizDAO();
     }
     
     @Override
@@ -34,7 +39,11 @@ public class EntrepriseOffresServlet extends HttpServlet {
         // Get all offers for this entreprise
         List<OffreStage> offres = offreStageDAO.getOffresByEntreprise(entreprise.getId());
         
+        // Get all quizzes for this entreprise
+        List<Quiz> quizzes = quizDAO.getQuizzesByEntrepriseId(entreprise.getId());
+        
         request.setAttribute("offres", offres);
+        request.setAttribute("quizzes", quizzes);
         request.getRequestDispatcher("entreprise-offres.jsp").forward(request, response);
     }
     
@@ -62,6 +71,7 @@ public class EntrepriseOffresServlet extends HttpServlet {
             String dureeMoisStr = request.getParameter("dureeMois");
             String remuneration = request.getParameter("remuneration");
             String competences = request.getParameter("competences");
+            String includeQuiz = request.getParameter("includeQuiz");
             
             if (offreIdStr != null && !offreIdStr.isEmpty()) {
                 int offreId = Integer.parseInt(offreIdStr);
@@ -76,6 +86,63 @@ public class EntrepriseOffresServlet extends HttpServlet {
                     offre.setDureeMois(Integer.parseInt(dureeMoisStr));
                     offre.setRemuneration(remuneration);
                     offre.setCompetencesRequises(competences);
+                    
+                    // Handle inline quiz creation/update
+                    if ("on".equals(includeQuiz) || "true".equals(includeQuiz)) {
+                        // Count questions
+                        int questionCount = 0;
+                        for (int i = 1; i <= 100; i++) {
+                            String questionText = request.getParameter("question_" + i);
+                            if (questionText != null && !questionText.trim().isEmpty()) {
+                                questionCount++;
+                            }
+                        }
+                        
+                        if (questionCount >= 3) {
+                            // Delete old quiz if exists
+                            if (offre.getQuizId() != null && offre.getQuizId() > 0) {
+                                quizDAO.deleteQuiz(offre.getQuizId());
+                            }
+                            
+                            // Create new quiz
+                            Quiz quiz = new Quiz();
+                            quiz.setEntrepriseId(entreprise.getId());
+                            quiz.setTitre("Quiz - " + titre);
+                            quiz.setDescription("Quiz de competences pour l'offre: " + titre);
+                            quiz.setPassingScore(75);
+                            
+                            int createdQuizId = quizDAO.createQuiz(quiz);
+                            
+                            if (createdQuizId > 0) {
+                                // Create questions
+                                int questionOrder = 1;
+                                for (int i = 1; i <= 100; i++) {
+                                    String questionText = request.getParameter("question_" + i);
+                                    if (questionText != null && !questionText.trim().isEmpty()) {
+                                        QuizQuestion question = new QuizQuestion();
+                                        question.setQuizId(createdQuizId);
+                                        question.setQuestionText(questionText.trim());
+                                        question.setOptionA(request.getParameter("optionA_" + i));
+                                        question.setOptionB(request.getParameter("optionB_" + i));
+                                        question.setOptionC(request.getParameter("optionC_" + i));
+                                        question.setOptionD(request.getParameter("optionD_" + i));
+                                        question.setCorrectAnswer(request.getParameter("correctAnswer_" + i));
+                                        
+                                        String pointsStr = request.getParameter("points_" + i);
+                                        question.setPoints(pointsStr != null && !pointsStr.trim().isEmpty() ? Integer.parseInt(pointsStr) : 5);
+                                        question.setQuestionOrder(questionOrder++);
+                                        
+                                        quizDAO.addQuestion(question);
+                                    }
+                                }
+                                offre.setQuizId(createdQuizId);
+                            }
+                        } else if (questionCount > 0) {
+                            session.setAttribute("error", "Le quiz doit contenir au moins 3 questions");
+                            response.sendRedirect("entreprise-offres");
+                            return;
+                        }
+                    }
                     
                     if (offreStageDAO.updateOffre(offre)) {
                         session.setAttribute("success", "Offre modifiée avec succès !");
@@ -94,6 +161,7 @@ public class EntrepriseOffresServlet extends HttpServlet {
             String dureeMoisStr = request.getParameter("dureeMois");
             String remuneration = request.getParameter("remuneration");
             String competences = request.getParameter("competences");
+            String includeQuiz = request.getParameter("includeQuiz");
             
             // Validation
             if (titre == null || titre.trim().isEmpty() ||
@@ -101,7 +169,7 @@ public class EntrepriseOffresServlet extends HttpServlet {
                 typeStage == null || typeStage.trim().isEmpty() ||
                 zone == null || zone.trim().isEmpty() ||
                 dureeMoisStr == null || dureeMoisStr.trim().isEmpty()) {
-                session.setAttribute("error", "Tous les champs obligatoires doivent être remplis");
+                session.setAttribute("error", "Tous les champs obligatoires doivent etre remplis");
                 response.sendRedirect("entreprise-offres");
                 return;
             }
@@ -118,7 +186,64 @@ public class EntrepriseOffresServlet extends HttpServlet {
             offre.setCompetencesRequises(competences);
             offre.setStatut("active");
             
-            // Note: created_at timestamp will be recorded automatically by database
+            // Handle inline quiz creation
+            Integer createdQuizId = null;
+            if ("on".equals(includeQuiz) || "true".equals(includeQuiz)) {
+                // Count questions
+                int questionCount = 0;
+                for (int i = 1; i <= 100; i++) {
+                    String questionText = request.getParameter("question_" + i);
+                    if (questionText != null && !questionText.trim().isEmpty()) {
+                        questionCount++;
+                    }
+                }
+                
+                if (questionCount < 3) {
+                    session.setAttribute("error", "Le quiz doit contenir au moins 3 questions");
+                    response.sendRedirect("entreprise-offres");
+                    return;
+                }
+                
+                if (questionCount >= 3) {
+                    // Create quiz
+                    Quiz quiz = new Quiz();
+                    quiz.setEntrepriseId(entreprise.getId());
+                    quiz.setTitre("Quiz - " + titre);
+                    quiz.setDescription("Quiz de competences pour l'offre: " + titre);
+                    quiz.setPassingScore(75);
+                    
+                    createdQuizId = quizDAO.createQuiz(quiz);
+                    
+                    if (createdQuizId > 0) {
+                        // Create questions
+                        int questionOrder = 1;
+                        for (int i = 1; i <= 100; i++) {
+                            String questionText = request.getParameter("question_" + i);
+                            if (questionText != null && !questionText.trim().isEmpty()) {
+                                QuizQuestion question = new QuizQuestion();
+                                question.setQuizId(createdQuizId);
+                                question.setQuestionText(questionText.trim());
+                                question.setOptionA(request.getParameter("optionA_" + i));
+                                question.setOptionB(request.getParameter("optionB_" + i));
+                                question.setOptionC(request.getParameter("optionC_" + i));
+                                question.setOptionD(request.getParameter("optionD_" + i));
+                                question.setCorrectAnswer(request.getParameter("correctAnswer_" + i));
+                                
+                                String pointsStr = request.getParameter("points_" + i);
+                                question.setPoints(pointsStr != null && !pointsStr.trim().isEmpty() ? Integer.parseInt(pointsStr) : 5);
+                                question.setQuestionOrder(questionOrder++);
+                                
+                                quizDAO.addQuestion(question);
+                            }
+                        }
+                        offre.setQuizId(createdQuizId);
+                    }
+                } else {
+                    session.setAttribute("error", "Le quiz doit contenir au moins 3 questions");
+                    response.sendRedirect("entreprise-offres");
+                    return;
+                }
+            }
             
             if (offreStageDAO.createOffre(offre)) {
                 session.setAttribute("success", "Offre créée avec succès !");

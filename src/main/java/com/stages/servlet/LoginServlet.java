@@ -44,7 +44,7 @@ public class LoginServlet extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) 
             throws ServletException, IOException {
-        String email = request.getParameter("email");
+        String identifier = request.getParameter("identifier");  // ONEFD ID for student, email for others
         String password = request.getParameter("password");
         String userType = request.getParameter("userType"); // "student", "entreprise" or "admin"
         
@@ -53,12 +53,12 @@ public class LoginServlet extends HttpServlet {
         }
         
         if ("admin".equals(userType)) {
-            // Admin login
-            boolean isAdmin = userDAO.authenticateAdmin(email, password);
+            // Admin login (uses email/username)
+            boolean isAdmin = userDAO.authenticateAdmin(identifier, password);
             
             if (isAdmin) {
                 HttpSession session = request.getSession();
-                session.setAttribute("admin", email);
+                session.setAttribute("admin", identifier);
                 session.setMaxInactiveInterval(30 * 60); // 30 minutes
                 response.sendRedirect("admin");
             } else {
@@ -66,8 +66,8 @@ public class LoginServlet extends HttpServlet {
                 request.getRequestDispatcher("login.jsp").forward(request, response);
             }
         } else if ("entreprise".equals(userType)) {
-            // Enterprise login
-            Entreprise entreprise = entrepriseDAO.authenticate(email, password);
+            // Enterprise login (uses email)
+            Entreprise entreprise = entrepriseDAO.authenticate(identifier, password);
             
             if (entreprise != null) {
                 HttpSession session = request.getSession();
@@ -85,8 +85,8 @@ public class LoginServlet extends HttpServlet {
                 request.getRequestDispatcher("login.jsp").forward(request, response);
             }
         } else {
-            // Student login
-            User user = userDAO.authenticate(email, password);
+            // Student login (uses ONEFD ID)
+            User user = userDAO.authenticate(identifier, password);
             
             if (user != null) {
                 HttpSession session = request.getSession();
@@ -100,7 +100,7 @@ public class LoginServlet extends HttpServlet {
                     response.sendRedirect("offres");
                 }
             } else {
-                request.setAttribute("error", "Email ou mot de passe incorrect");
+                request.setAttribute("error", "Identifiant ONEFD ou mot de passe incorrect");
                 request.getRequestDispatcher("login.jsp").forward(request, response);
             }
         }

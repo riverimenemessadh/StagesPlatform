@@ -1,4 +1,4 @@
-﻿<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ page import="com.stages.model.*, java.util.*, java.text.SimpleDateFormat" %>
 <%
     User user = (User) session.getAttribute("user");
@@ -131,6 +131,11 @@
                             <% if (offre.getRemuneration() != null && !offre.getRemuneration().isEmpty()) { %>
                                 <div class="detail-item">
                                     <span><%= offre.getRemuneration() %></span>
+                                </div>
+                            <% } %>
+                            <% if (offre.hasQuiz()) { %>
+                                <div class="detail-item">
+                                    <span class="badge badge-warning">Quiz Requis</span>
                                 </div>
                             <% } %>
                         </div>

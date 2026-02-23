@@ -117,7 +117,6 @@
 <body>
     <div class="error-container">
         <div class="error-card">
-            <div class="error-icon">⚠️</div>
             <div class="error-code">500</div>
             <h1 class="error-title">Erreur serveur interne</h1>
             <p class="error-message">
@@ -130,7 +129,7 @@
                     ← Retour
                 </a>
                 <a href="<%= request.getContextPath() %>/login" class="error-btn error-btn-primary">
-                    🏠 Accueil
+                    Login
                 </a>
             </div>
             

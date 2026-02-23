@@ -99,7 +99,6 @@
 <body>
     <div class="error-container">
         <div class="error-card">
-            <div class="error-icon">🔍</div>
             <div class="error-code">404</div>
             <h1 class="error-title">Page non trouvée</h1>
             <p class="error-message">
@@ -111,7 +110,7 @@
                     ← Retour
                 </a>
                 <a href="<%= request.getContextPath() %>/login" class="error-btn error-btn-primary">
-                    🏠 Accueil
+                    Login
                 </a>
             </div>
         </div>

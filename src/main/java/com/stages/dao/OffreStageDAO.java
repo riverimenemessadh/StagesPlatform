@@ -10,8 +10,9 @@ public class OffreStageDAO {
     // Get all active offers
     public List<OffreStage> getAllOffres() {
         List<OffreStage> offres = new ArrayList<>();
-        String sql = "SELECT o.*, e.nom as entreprise_name FROM offre_stage o " +
+        String sql = "SELECT o.*, e.nom as entreprise_name, q.titre as quiz_titre FROM offre_stage o " +
                     "JOIN entreprise e ON o.entreprise_id = e.id " +
+                    "LEFT JOIN quiz q ON o.quiz_id = q.id " +
                     "WHERE o.statut = 'active' ORDER BY o.created_at DESC";
         
         try (Connection conn = DatabaseConnection.getConnection();
@@ -29,8 +30,10 @@ public class OffreStageDAO {
     
     // Get offer by ID
     public OffreStage getOffreById(int id) {
-        String sql = "SELECT o.*, e.nom as entreprise_name FROM offre_stage o " +
-                    "JOIN entreprise e ON o.entreprise_id = e.id WHERE o.id = ?";
+        String sql = "SELECT o.*, e.nom as entreprise_name, q.titre as quiz_titre FROM offre_stage o " +
+                    "JOIN entreprise e ON o.entreprise_id = e.id " +
+                    "LEFT JOIN quiz q ON o.quiz_id = q.id " +
+                    "WHERE o.id = ?";
         
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -51,8 +54,10 @@ public class OffreStageDAO {
     public List<OffreStage> searchOffres(String specialite, String zone, String type) {
         List<OffreStage> offres = new ArrayList<>();
         StringBuilder sql = new StringBuilder(
-            "SELECT o.*, e.nom as entreprise_name FROM offre_stage o " +
-            "JOIN entreprise e ON o.entreprise_id = e.id WHERE o.statut = 'active'"
+            "SELECT o.*, e.nom as entreprise_name, q.titre as quiz_titre FROM offre_stage o " +
+            "JOIN entreprise e ON o.entreprise_id = e.id " +
+            "LEFT JOIN quiz q ON o.quiz_id = q.id " +
+            "WHERE o.statut = 'active'"
         );
         
         List<String> conditions = new ArrayList<>();
@@ -137,8 +142,9 @@ public class OffreStageDAO {
     // Get recent offers (limited number)
     public List<OffreStage> getRecentOffres(int limit) {
         List<OffreStage> offres = new ArrayList<>();
-        String sql = "SELECT o.*, e.nom as entreprise_name FROM offre_stage o " +
+        String sql = "SELECT o.*, e.nom as entreprise_name, q.titre as quiz_titre FROM offre_stage o " +
                     "JOIN entreprise e ON o.entreprise_id = e.id " +
+                    "LEFT JOIN quiz q ON o.quiz_id = q.id " +
                     "ORDER BY o.created_at DESC LIMIT ?";
         
         try (Connection conn = DatabaseConnection.getConnection();
@@ -159,8 +165,9 @@ public class OffreStageDAO {
     // Get offers by entreprise ID
     public List<OffreStage> getOffresByEntreprise(int entrepriseId) {
         List<OffreStage> offres = new ArrayList<>();
-        String sql = "SELECT o.*, e.nom as entreprise_name FROM offre_stage o " +
+        String sql = "SELECT o.*, e.nom as entreprise_name, q.titre as quiz_titre FROM offre_stage o " +
                     "JOIN entreprise e ON o.entreprise_id = e.id " +
+                    "LEFT JOIN quiz q ON o.quiz_id = q.id " +
                     "WHERE o.entreprise_id = ? ORDER BY o.created_at DESC";
         
         try (Connection conn = DatabaseConnection.getConnection();
@@ -182,7 +189,7 @@ public class OffreStageDAO {
     public boolean createOffre(OffreStage offre) {
         String sql = "INSERT INTO offre_stage (titre, description, entreprise_id, specialite, type_stage, " +
                     "zone_geographique, duree_mois, remuneration, " +
-                    "competences_requises, statut) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'active')";
+                    "competences_requises, quiz_id, statut) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'active')";
         
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
@@ -196,6 +203,11 @@ public class OffreStageDAO {
             stmt.setInt(7, offre.getDureeMois());
             stmt.setString(8, offre.getRemuneration());
             stmt.setString(9, offre.getCompetencesRequises());
+            if (offre.getQuizId() != null && offre.getQuizId() > 0) {
+                stmt.setInt(10, offre.getQuizId());
+            } else {
+                stmt.setNull(10, Types.INTEGER);
+            }
             
             int affectedRows = stmt.executeUpdate();
             
@@ -217,7 +229,7 @@ public class OffreStageDAO {
     public boolean updateOffre(OffreStage offre) {
         String sql = "UPDATE offre_stage SET titre = ?, description = ?, specialite = ?, " +
                     "type_stage = ?, zone_geographique = ?, duree_mois = ?, remuneration = ?, " +
-                    "competences_requises = ? WHERE id = ?";
+                    "competences_requises = ?, quiz_id = ? WHERE id = ?";
         
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -230,7 +242,12 @@ public class OffreStageDAO {
             stmt.setInt(6, offre.getDureeMois());
             stmt.setString(7, offre.getRemuneration());
             stmt.setString(8, offre.getCompetencesRequises());
-            stmt.setInt(9, offre.getId());
+            if (offre.getQuizId() != null && offre.getQuizId() > 0) {
+                stmt.setInt(9, offre.getQuizId());
+            } else {
+                stmt.setNull(9, Types.INTEGER);
+            }
+            stmt.setInt(10, offre.getId());
             
             return stmt.executeUpdate() > 0;
         } catch (SQLException e) {
@@ -283,6 +300,18 @@ public class OffreStageDAO {
         offre.setDureeMois(rs.getInt("duree_mois"));
         offre.setRemuneration(rs.getString("remuneration"));
         offre.setCompetencesRequises(rs.getString("competences_requises"));
+        
+        // Quiz fields (nullable)
+        int quizId = rs.getInt("quiz_id");
+        if (!rs.wasNull()) {
+            offre.setQuizId(quizId);
+        }
+        try {
+            offre.setQuizTitre(rs.getString("quiz_titre"));
+        } catch (SQLException e) {
+            // quiz_titre might not be present in all queries
+        }
+        
         offre.setStatut(rs.getString("statut"));
         offre.setCreatedAt(rs.getTimestamp("created_at"));
         return offre;

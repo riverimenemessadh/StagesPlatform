@@ -4,6 +4,7 @@ import java.sql.Timestamp;
 
 public class User {
     private int id;
+    private String onefdId;
     private String nom;
     private String prenom;
     private String email;
@@ -28,6 +29,9 @@ public class User {
     // Getters and Setters
     public int getId() { return id; }
     public void setId(int id) { this.id = id; }
+    
+    public String getOnefdId() { return onefdId; }
+    public void setOnefdId(String onefdId) { this.onefdId = onefdId; }
     
     public String getNom() { return nom; }
     public void setNom(String nom) { this.nom = nom; }

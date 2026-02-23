@@ -1,8 +1,10 @@
-﻿<%@ page contentType="text/html;charset=UTF-8" language="java" %>
-<%@ page import="com.stages.model.*" %>
+<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@ page import="com.stages.model.*, java.util.*" %>
 <%
     User user = (User) session.getAttribute("user");
     OffreStage offre = (OffreStage) request.getAttribute("offre");
+    List<QuizQuestion> quizQuestions = (List<QuizQuestion>) request.getAttribute("quizQuestions");
+    
     if (user == null || offre == null) {
         response.sendRedirect("offres");
         return;
@@ -30,7 +32,8 @@
         
         <div class="card">
             <div class="card-body">
-                <div class="offer-summary">
+                <!-- Offer Summary -->
+                <div class="offer-summary mb-xl">
                     <div class="offer-header">
                         <h2><%= offre.getTitre() %></h2>
                         <span class="badge badge-<%= offre.getTypeStage().equals("Apprentissage") ? "primary" : "secondary" %>">
@@ -67,30 +70,74 @@
                     </div>
                     
                     <% if (offre.getCompetencesRequises() != null && !offre.getCompetencesRequises().isEmpty()) { %>
-                        <div class="offer-competences mb-lg">
+                        <div class="offer-competences">
                             <strong>Compétences requises :</strong>
                             <p><%= offre.getCompetencesRequises() %></p>
                         </div>
                     <% } %>
                 </div>
                 
-                <hr>
+                <hr class="my-xl">
                 
+                <!-- Application Form -->
                 <form action="candidature" method="post" class="application-form">
                     <input type="hidden" name="offreId" value="<%= offre.getId() %>">
                     
+                    <h3 class="mb-lg">Votre Candidature</h3>
+                    
+                    <!-- Letter of Motivation -->
                     <div class="form-group">
                         <label for="lettreMotivation">Lettre de motivation *</label>
                         <textarea id="lettreMotivation" name="lettreMotivation" rows="8" required
                                   placeholder="Expliquez pourquoi vous êtes intéressé(e) par cette offre (minimum 50 mots)..."></textarea>
-                        <small class="form-text" id="wordCountText">Minimum 50 mots requis</small>
-                        <div id="wordCountError" class="error-message" style="display: none; margin-top: var(--spacing-sm); padding: var(--spacing-md); background-color: var(--color-danger-bg); border-left: 3px solid var(--color-danger); border-radius: var(--radius-sm); color: var(--color-danger); font-weight: var(--font-weight-medium);">
+                        <small class="form-text" id="wordCountText">Minimum 50 mots requis (0 mots actuellement)</small>
+                        <div id="wordCountError" class="error-message" style="display: none;">
                             <strong>Erreur :</strong> <span id="wordCountErrorText"></span>
                         </div>
                     </div>
                     
-                    <div class="form-actions">
-                        <button type="submit" class="btn btn-primary" id="submitBtn">
+                    <!-- Quiz Section (if offer has quiz) -->
+                    <% if (quizQuestions != null && !quizQuestions.isEmpty()) { %>
+                        <hr class="my-xl">
+                        
+                        <div class="quiz-section">
+                            <div class="quiz-header-inline">
+                                <h3>Quiz de Competences</h3>
+                                <span class="badge badge-warning">Obligatoire</span>
+                            </div>
+                            <p class="text-muted mb-lg">Veuillez repondre a toutes les questions ci-dessous. Score minimum requis: 75%</p>
+                            
+                            <% for (int i = 0; i < quizQuestions.size(); i++) {
+                                QuizQuestion question = quizQuestions.get(i); %>
+                                <div class="quiz-question mb-lg">
+                                    <p class="question-text">
+                                        <strong>Question <%= (i + 1) %> :</strong> <%= question.getQuestionText() %>
+                                    </p>
+                                    <div class="quiz-options">
+                                        <label class="radio-label">
+                                            <input type="radio" name="q<%= question.getId() %>" value="a" required>
+                                            A) <%= question.getOptionA() %>
+                                        </label>
+                                        <label class="radio-label">
+                                            <input type="radio" name="q<%= question.getId() %>" value="b">
+                                            B) <%= question.getOptionB() %>
+                                        </label>
+                                        <label class="radio-label">
+                                            <input type="radio" name="q<%= question.getId() %>" value="c">
+                                            C) <%= question.getOptionC() %>
+                                        </label>
+                                        <label class="radio-label">
+                                            <input type="radio" name="q<%= question.getId() %>" value="d">
+                                            D) <%= question.getOptionD() %>
+                                        </label>
+                                    </div>
+                                </div>
+                            <% } %>
+                        </div>
+                    <% } %>
+                    
+                    <div class="form-actions mt-xl">
+                        <button type="submit" class="btn btn-primary btn-lg">
                             Envoyer ma candidature
                         </button>
                         <a href="offres" class="btn btn-secondary">Annuler</a>
@@ -134,10 +181,5 @@
             }
         });
     </script>
-</body>
-</html>
-            </div>
-        </div>
-    </div>
 </body>
 </html>

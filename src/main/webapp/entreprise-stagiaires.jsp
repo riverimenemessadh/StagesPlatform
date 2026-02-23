@@ -1,4 +1,4 @@
-﻿<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ page import="com.stages.model.*, java.util.*, java.text.SimpleDateFormat" %>
 <%
     Entreprise entreprise = (Entreprise) session.getAttribute("entreprise");
@@ -55,6 +55,14 @@
                                             <strong>Accepté le:</strong> <%= sdf.format(stagiaire.getDateReponse()) %>
                                         </div>
                                     <% } %>
+                                    <% if (stagiaire.getQuizScore() != null) { %>
+                                        <div class="detail-item">
+                                            <strong>Score Quiz:</strong> 
+                                            <span class="badge <%= stagiaire.getQuizScore() >= 75 ? "badge-success" : "badge-danger" %>">
+                                                <%= String.format("%.1f", stagiaire.getQuizScore()) %>%
+                                            </span>
+                                        </div>
+                                    <% } %>
                                 </div>
                                 <button onclick="viewDetails(<%= stagiaire.getId() %>)" class="btn btn-primary btn-block">
                                     Voir détails
@@ -62,6 +70,15 @@
                                 
                                 <!-- Hidden details -->
                                 <div id="details-<%= stagiaire.getId() %>" class="details-row mt-lg" style="display: none; padding-top: var(--spacing-lg); border-top: 1px solid var(--color-border-light);">
+                                    <% if (stagiaire.getQuizAttemptId() != null && stagiaire.getQuizAttemptId() > 0) { %>
+                                        <div class="mb-md">
+                                            <strong>Résultats du Quiz:</strong>
+                                            <p>Score: <%= String.format("%.1f", stagiaire.getQuizScore()) %>%</p>
+                                            <a href="quiz?action=results&attemptId=<%= stagiaire.getQuizAttemptId() %>" class="btn btn-sm btn-info">
+                                                Voir les réponses détaillées
+                                            </a>
+                                        </div>
+                                    <% } %>
                                     <% if (stagiaire.getLettreMotivation() != null && !stagiaire.getLettreMotivation().isEmpty()) { %>
                                         <div class="mb-md">
                                             <strong>Lettre de motivation:</strong>

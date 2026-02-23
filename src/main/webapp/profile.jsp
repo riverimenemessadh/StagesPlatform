@@ -1,4 +1,4 @@
-﻿<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ page import="com.stages.model.User" %>
 <%
     User user = (User) session.getAttribute("user");
@@ -45,7 +45,7 @@
             <div class="card-body">
                 <div class="profile-info mb-xl">
                     <h3><%= user.getFullName() %></h3>
-                    <p class="text-muted"><%= user.getEmail() %></p>
+                    <p class="text-muted"><strong>ID ONEFD:</strong> <%= user.getOnefdId() %></p>
                 </div>
                 
                 <hr class="mb-xl">

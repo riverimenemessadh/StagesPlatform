@@ -53,6 +53,16 @@
             <form action="register" method="post" class="auth-form" id="studentForm" style="<%= isEntreprise ? "display: none;" : "" %>">
                 <input type="hidden" name="userType" value="student">
                 
+                <div class="form-group">
+                    <label for="onefdId">Identifiant ONEFD *</label>
+                    <input type="text" id="onefdId" name="onefdId" required
+                           pattern="\d{4}/\d{3}/\d{4}"
+                           placeholder="YYYY/XXX/XXXX (ex: 2024/123/4567)"
+                           title="Format: YYYY/XXX/XXXX"
+                           value="<%= request.getParameter("onefdId") != null ? request.getParameter("onefdId") : "" %>">
+                    <small class="form-text">Utilisez l'identifiant fourni par ONEFD</small>
+                </div>
+                
                 <div class="form-row">
                     <div class="form-group">
                         <label for="nom">Nom *</label>
@@ -65,13 +75,6 @@
                         <input type="text" id="prenom" name="prenom" required
                                value="<%= request.getParameter("prenom") != null ? request.getParameter("prenom") : "" %>">
                     </div>
-                </div>
-                
-                <div class="form-group">
-                    <label for="email">Email *</label>
-                    <input type="email" id="email" name="email" required
-                           placeholder="votre.email@exemple.com"
-                           value="<%= request.getParameter("email") != null ? request.getParameter("email") : "" %>">
                 </div>
                 
                 <div class="form-group">

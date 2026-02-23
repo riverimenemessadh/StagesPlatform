@@ -73,9 +73,14 @@
                     <div class="offer-card">
                         <div class="offer-header">
                             <h3><%= offre.getTitre() %></h3>
-                            <span class="badge badge-<%= offre.getTypeStage().equals("Apprentissage") ? "primary" : "secondary" %>">
-                                <%= offre.getTypeStage() %>
-                            </span>
+                            <div class="offer-badges">
+                                <span class="badge badge-<%= offre.getTypeStage().equals("Apprentissage") ? "primary" : "secondary" %>">
+                                    <%= offre.getTypeStage() %>
+                                </span>
+                                <% if (offre.hasQuiz()) { %>
+                                    <span class="badge badge-info">Quiz Requis</span>
+                                <% } %>
+                            </div>
                         </div>
                         
                         <div class="offer-details">

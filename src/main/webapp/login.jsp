@@ -54,9 +54,9 @@
                 <input type="hidden" name="userType" id="userType" value="student">
                 
                 <div class="form-group">
-                    <label for="email">Email / Nom d'utilisateur</label>
-                    <input type="text" id="email" name="email" required 
-                           placeholder="votre.email@exemple.com">
+                    <label for="identifier" id="identifierLabel">Identifiant ONEFD</label>
+                    <input type="text" id="identifier" name="identifier" required 
+                           placeholder="YYYY/XXX/XXXX">
                 </div>
                 
                 <div class="form-group">
@@ -99,6 +99,9 @@
             
             document.getElementById('userType').value = type;
             
+            const identifierInput = document.getElementById('identifier');
+            const identifierLabel = document.getElementById('identifierLabel');
+            
             // Hide all footers
             document.getElementById('studentFooter').style.display = 'none';
             document.getElementById('entrepriseFooter').style.display = 'none';
@@ -106,13 +109,19 @@
             
             if (type === 'admin') {
                 document.getElementById('adminFooter').style.display = 'block';
-                document.getElementById('email').placeholder = "Nom d'utilisateur";
+                identifierLabel.textContent = "Nom d'utilisateur";
+                identifierInput.placeholder = "Nom d'utilisateur";
+                identifierInput.type = "text";
             } else if (type === 'entreprise') {
                 document.getElementById('entrepriseFooter').style.display = 'block';
-                document.getElementById('email').placeholder = "email@entreprise.com";
+                identifierLabel.textContent = "Email";
+                identifierInput.placeholder = "email@entreprise.com";
+                identifierInput.type = "email";
             } else {
                 document.getElementById('studentFooter').style.display = 'block';
-                document.getElementById('email').placeholder = "votre.email@exemple.com";
+                identifierLabel.textContent = "Identifiant ONEFD";
+                identifierInput.placeholder = "YYYY/XXX/XXXX (ex: 2024/123/4567)";
+                identifierInput.type = "text";
             }
         }
     </script>

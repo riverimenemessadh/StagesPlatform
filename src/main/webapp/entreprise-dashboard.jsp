@@ -1,5 +1,5 @@
-﻿<%@ page contentType="text/html;charset=UTF-8" language="java" %>
-<%@ page import="com.stages.model.*, java.util.*, java.text.SimpleDateFormat" %>
+<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@ page import="com.stages.model.*, com.stages.dao.*, java.util.*, java.text.SimpleDateFormat" %>
 <%
     Entreprise entreprise = (Entreprise) session.getAttribute("entreprise");
     if (entreprise == null) {
@@ -9,6 +9,10 @@
     
     List<Candidature> candidatures = (List<Candidature>) request.getAttribute("candidatures");
     SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy HH:mm");
+    
+    // Initialize DAOs for quiz data
+    QuizDAO quizDAO = new QuizDAO();
+    QuizAttemptDAO quizAttemptDAO = new QuizAttemptDAO();
 %>
 <!DOCTYPE html>
 <html lang="fr">
@@ -122,6 +126,62 @@
                                         <td colspan="6">
                                             <div class="application-details-admin">
                                                 <h4>Détails de la candidature</h4>
+                                                
+                                                <% if (c.getQuizAttemptId() != null && c.getQuizAttemptId() > 0) { 
+                                                    QuizAttempt attempt = quizAttemptDAO.getAttemptById(c.getQuizAttemptId());
+                                                    if (attempt != null) {
+                                                        List<QuizResponse> responses = quizAttemptDAO.getResponsesByAttemptId(c.getQuizAttemptId());
+                                                        if (responses != null && !responses.isEmpty()) {
+                                                %>
+                                                    <div class="detail-section quiz-result-section">
+                                                        <strong>Résultat du Quiz :</strong>
+                                                        <div class="quiz-score-display mb-md">
+                                                            <span class="score-badge <%= attempt.getScore() >= 75 ? "badge-success" : "badge-danger" %>">
+                                                                <%= String.format("%.1f", attempt.getScore()) %>%
+                                                            </span>
+                                                            <span class="text-muted">
+                                                                (<%= attempt.getEarnedPoints() %> / <%= attempt.getTotalPoints() %> points)
+                                                            </span>
+                                                        </div>
+                                                        
+                                                        <div class="quiz-answers-inline">
+                                                            <h5>Réponses du candidat:</h5>
+                                                            <% for (int i = 0; i < responses.size(); i++) {
+                                                                QuizResponse resp = responses.get(i);
+                                                                if (resp != null && resp.getQuestionId() > 0) {
+                                                                    QuizQuestion question = quizDAO.getQuestionById(resp.getQuestionId());
+                                                                    if (question != null && resp.getSelectedAnswer() != null) { 
+                                                                        String selectedAnswer = resp.getSelectedAnswer();
+                                                                        String correctAnswer = question.getCorrectAnswer() != null ? question.getCorrectAnswer() : "";
+                                                            %>
+                                                                <div class="quiz-answer-item <%= resp.isCorrect() ? "correct" : "incorrect" %>">
+                                                                    <p class="question-text"><strong>Q<%= (i + 1) %>:</strong> <%= question.getQuestionText() != null ? question.getQuestionText() : "" %></p>
+                                                                    <p class="student-answer">
+                                                                        <strong>Réponse:</strong> 
+                                                                        <span class="<%= resp.isCorrect() ? "text-success" : "text-danger" %>">
+                                                                            <%= selectedAnswer.toUpperCase() %>) <%= question.getOptionByLetter(selectedAnswer) %>
+                                                                        </span>
+                                                                    </p>
+                                                                    <% if (!resp.isCorrect() && !correctAnswer.isEmpty()) { %>
+                                                                        <p class="correct-answer">
+                                                                            <strong>Correct:</strong> 
+                                                                            <span class="text-success">
+                                                                                <%= correctAnswer.toUpperCase() %>) <%= question.getOptionByLetter(correctAnswer) %>
+                                                                            </span>
+                                                                        </p>
+                                                                    <% } %>
+                                                                </div>
+                                                            <% 
+                                                                    }
+                                                                }
+                                                            } %>
+                                                        </div>
+                                                    </div>
+                                                <% 
+                                                        }
+                                                    }
+                                                } %>
+                                                
                                                 <% if (c.getLettreMotivation() != null && !c.getLettreMotivation().isEmpty()) { %>
                                                     <div class="detail-section">
                                                         <strong>Lettre de motivation :</strong>

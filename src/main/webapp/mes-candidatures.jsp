@@ -57,6 +57,15 @@
                                 </div>
                             <% } %>
                             
+                            <% if (c.getQuizAttemptId() != null && c.getQuizScore() != null) { %>
+                                <div class="quiz-score-section">
+                                    <strong>Score du Quiz :</strong>
+                                    <span class="quiz-score-badge <%= c.getQuizScore() >= 75 ? "badge-success" : "badge-danger" %>">
+                                        <%= String.format("%.1f", c.getQuizScore()) %>%
+                                    </span>
+                                </div>
+                            <% } %>
+                            
                             <% if (c.getLettreMotivation() != null && !c.getLettreMotivation().isEmpty()) { %>
                                 <details class="motivation-letter">
                                     <summary>Voir ma lettre de motivation</summary>

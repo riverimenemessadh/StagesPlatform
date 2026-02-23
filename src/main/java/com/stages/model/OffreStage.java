@@ -14,6 +14,8 @@ public class OffreStage {
     private int dureeMois;
     private String remuneration;
     private String competencesRequises;
+    private Integer quizId;
+    private String quizTitre;
     private String statut;
     private Timestamp createdAt;
     
@@ -53,6 +55,14 @@ public class OffreStage {
     
     public String getCompetencesRequises() { return competencesRequises; }
     public void setCompetencesRequises(String competencesRequises) { this.competencesRequises = competencesRequises; }
+    
+    public Integer getQuizId() { return quizId; }
+    public void setQuizId(Integer quizId) { this.quizId = quizId; }
+    
+    public String getQuizTitre() { return quizTitre; }
+    public void setQuizTitre(String quizTitre) { this.quizTitre = quizTitre; }
+    
+    public boolean hasQuiz() { return quizId != null && quizId > 0; }
     
     public String getStatut() { return statut; }
     public void setStatut(String statut) { this.statut = statut; }

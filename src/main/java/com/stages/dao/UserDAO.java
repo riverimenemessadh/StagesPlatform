@@ -7,14 +7,14 @@ import java.util.List;
 
 public class UserDAO {
     
-    // Authenticate user
-    public User authenticate(String email, String password) {
-        String sql = "SELECT * FROM apprenant WHERE email = ? AND password = ?";
+    // Authenticate user by ONEFD ID
+    public User authenticate(String onefdId, String password) {
+        String sql = "SELECT * FROM apprenant WHERE onefd_id = ? AND password = ?";
         
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             
-            stmt.setString(1, email);
+            stmt.setString(1, onefdId);
             stmt.setString(2, password);
             
             ResultSet rs = stmt.executeQuery();
@@ -28,17 +28,18 @@ public class UserDAO {
         return null;
     }
     
-    // Register new user
+    // Register new user with ONEFD ID
     public boolean register(User user) {
-        String sql = "INSERT INTO apprenant (nom, prenom, email, password, profile_completed) VALUES (?, ?, ?, ?, FALSE)";
+        String sql = "INSERT INTO apprenant (onefd_id, nom, prenom, email, password, profile_completed) VALUES (?, ?, ?, ?, ?, FALSE)";
         
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             
-            stmt.setString(1, user.getNom());
-            stmt.setString(2, user.getPrenom());
-            stmt.setString(3, user.getEmail());
-            stmt.setString(4, user.getPassword());
+            stmt.setString(1, user.getOnefdId());
+            stmt.setString(2, user.getNom());
+            stmt.setString(3, user.getPrenom());
+            stmt.setString(4, user.getEmail());
+            stmt.setString(5, user.getPassword());
             
             int affectedRows = stmt.executeUpdate();
             
@@ -72,6 +73,44 @@ public class UserDAO {
             e.printStackTrace();
         }
         return false;
+    }
+    
+    // Check if ONEFD ID exists
+    public boolean onefdIdExists(String onefdId) {
+        String sql = "SELECT COUNT(*) FROM apprenant WHERE onefd_id = ?";
+        
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            
+            stmt.setString(1, onefdId);
+            ResultSet rs = stmt.executeQuery();
+            
+            if (rs.next()) {
+                return rs.getInt(1) > 0;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+    
+    // Get user by ONEFD ID
+    public User getUserByOnefdId(String onefdId) {
+        String sql = "SELECT * FROM apprenant WHERE onefd_id = ?";
+        
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            
+            stmt.setString(1, onefdId);
+            ResultSet rs = stmt.executeQuery();
+            
+            if (rs.next()) {
+                return extractUserFromResultSet(rs);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
     }
     
     // Update user profile
@@ -185,6 +224,7 @@ public class UserDAO {
     private User extractUserFromResultSet(ResultSet rs) throws SQLException {
         User user = new User();
         user.setId(rs.getInt("id"));
+        user.setOnefdId(rs.getString("onefd_id"));
         user.setNom(rs.getString("nom"));
         user.setPrenom(rs.getString("prenom"));
         user.setEmail(rs.getString("email"));

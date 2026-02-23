@@ -9,8 +9,8 @@ public class CandidatureDAO {
     
     // Create new application
     public boolean createCandidature(Candidature candidature) {
-        String sql = "INSERT INTO candidature (apprenant_id, offre_id, lettre_motivation, statut) " +
-                    "VALUES (?, ?, ?, 'En attente')";
+        String sql = "INSERT INTO candidature (apprenant_id, offre_id, lettre_motivation, quiz_attempt_id, quiz_score, statut) " +
+                    "VALUES (?, ?, ?, ?, ?, 'En attente')";
         
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -18,6 +18,16 @@ public class CandidatureDAO {
             stmt.setInt(1, candidature.getApprenantId());
             stmt.setInt(2, candidature.getOffreId());
             stmt.setString(3, candidature.getLettreMotivation());
+            if (candidature.getQuizAttemptId() != null && candidature.getQuizAttemptId() > 0) {
+                stmt.setInt(4, candidature.getQuizAttemptId());
+            } else {
+                stmt.setNull(4, Types.INTEGER);
+            }
+            if (candidature.getQuizScore() != null) {
+                stmt.setDouble(5, candidature.getQuizScore());
+            } else {
+                stmt.setNull(5, Types.DOUBLE);
+            }
             
             return stmt.executeUpdate() > 0;
         } catch (SQLException e) {
@@ -50,10 +60,11 @@ public class CandidatureDAO {
     public List<Candidature> getCandidaturesByApprenant(int apprenantId) {
         List<Candidature> candidatures = new ArrayList<>();
         String sql = "SELECT c.*, o.titre as offre_titre, " +
-                    "e.nom as entreprise_name " +
+                    "e.nom as entreprise_name, qa.score as quiz_score " +
                     "FROM candidature c " +
                     "JOIN offre_stage o ON c.offre_id = o.id " +
                     "JOIN entreprise e ON o.entreprise_id = e.id " +
+                    "LEFT JOIN quiz_attempt qa ON c.quiz_attempt_id = qa.id " +
                     "WHERE c.apprenant_id = ? " +
                     "ORDER BY c.date_candidature DESC";
         
@@ -77,11 +88,12 @@ public class CandidatureDAO {
         List<Candidature> candidatures = new ArrayList<>();
         String sql = "SELECT c.*, " +
                     "a.nom as apprenant_nom, a.prenom as apprenant_prenom, a.email as apprenant_email, " +
-                    "o.titre as offre_titre, e.nom as entreprise_name " +
+                    "o.titre as offre_titre, e.nom as entreprise_name, qa.score as quiz_score " +
                     "FROM candidature c " +
                     "JOIN apprenant a ON c.apprenant_id = a.id " +
                     "JOIN offre_stage o ON c.offre_id = o.id " +
                     "JOIN entreprise e ON o.entreprise_id = e.id " +
+                    "LEFT JOIN quiz_attempt qa ON c.quiz_attempt_id = qa.id " +
                     "ORDER BY c.date_candidature DESC";
         
         try (Connection conn = DatabaseConnection.getConnection();
@@ -106,11 +118,12 @@ public class CandidatureDAO {
         List<Candidature> candidatures = new ArrayList<>();
         String sql = "SELECT c.*, " +
                     "a.nom as apprenant_nom, a.prenom as apprenant_prenom, a.email as apprenant_email, " +
-                    "o.titre as offre_titre, e.nom as entreprise_name " +
+                    "o.titre as offre_titre, e.nom as entreprise_name, qa.score as quiz_score " +
                     "FROM candidature c " +
                     "JOIN apprenant a ON c.apprenant_id = a.id " +
                     "JOIN offre_stage o ON c.offre_id = o.id " +
                     "JOIN entreprise e ON o.entreprise_id = e.id " +
+                    "LEFT JOIN quiz_attempt qa ON c.quiz_attempt_id = qa.id " +
                     "WHERE c.statut = ? " +
                     "ORDER BY c.date_candidature DESC";
         
@@ -157,11 +170,12 @@ public class CandidatureDAO {
         List<Candidature> candidatures = new ArrayList<>();
         String sql = "SELECT c.*, " +
                     "a.nom as apprenant_nom, a.prenom as apprenant_prenom, a.email as apprenant_email, " +
-                    "o.titre as offre_titre, e.nom as entreprise_name " +
+                    "o.titre as offre_titre, e.nom as entreprise_name, qa.score as quiz_score " +
                     "FROM candidature c " +
                     "JOIN apprenant a ON c.apprenant_id = a.id " +
                     "JOIN offre_stage o ON c.offre_id = o.id " +
                     "JOIN entreprise e ON o.entreprise_id = e.id " +
+                    "LEFT JOIN quiz_attempt qa ON c.quiz_attempt_id = qa.id " +
                     "WHERE a.nom LIKE ? OR a.prenom LIKE ? OR a.email LIKE ? OR o.titre LIKE ? OR e.nom LIKE ? " +
                     "ORDER BY c.date_candidature DESC";
         
@@ -195,11 +209,12 @@ public class CandidatureDAO {
         List<Candidature> candidatures = new ArrayList<>();
         String sql = "SELECT c.*, " +
                     "a.nom as apprenant_nom, a.prenom as apprenant_prenom, a.email as apprenant_email, " +
-                    "o.titre as offre_titre, e.nom as entreprise_name " +
+                    "o.titre as offre_titre, e.nom as entreprise_name, qa.score as quiz_score " +
                     "FROM candidature c " +
                     "JOIN apprenant a ON c.apprenant_id = a.id " +
                     "JOIN offre_stage o ON c.offre_id = o.id " +
                     "JOIN entreprise e ON o.entreprise_id = e.id " +
+                    "LEFT JOIN quiz_attempt qa ON c.quiz_attempt_id = qa.id " +
                     "ORDER BY c.date_candidature DESC LIMIT ?";
         
         try (Connection conn = DatabaseConnection.getConnection();
@@ -226,11 +241,12 @@ public class CandidatureDAO {
         List<Candidature> candidatures = new ArrayList<>();
         String sql = "SELECT c.*, " +
                     "a.nom as apprenant_nom, a.prenom as apprenant_prenom, a.email as apprenant_email, " +
-                    "o.titre as offre_titre, e.nom as entreprise_name " +
+                    "o.titre as offre_titre, e.nom as entreprise_name, qa.score as quiz_score " +
                     "FROM candidature c " +
                     "JOIN apprenant a ON c.apprenant_id = a.id " +
                     "JOIN offre_stage o ON c.offre_id = o.id " +
                     "JOIN entreprise e ON o.entreprise_id = e.id " +
+                    "LEFT JOIN quiz_attempt qa ON c.quiz_attempt_id = qa.id " +
                     "WHERE o.entreprise_id = ? " +
                     "ORDER BY c.date_candidature DESC";
         
@@ -258,11 +274,12 @@ public class CandidatureDAO {
         List<Candidature> candidatures = new ArrayList<>();
         String sql = "SELECT c.*, " +
                     "a.nom as apprenant_nom, a.prenom as apprenant_prenom, a.email as apprenant_email, " +
-                    "o.titre as offre_titre, e.nom as entreprise_name " +
+                    "o.titre as offre_titre, e.nom as entreprise_name, qa.score as quiz_score " +
                     "FROM candidature c " +
                     "JOIN apprenant a ON c.apprenant_id = a.id " +
                     "JOIN offre_stage o ON c.offre_id = o.id " +
                     "JOIN entreprise e ON o.entreprise_id = e.id " +
+                    "LEFT JOIN quiz_attempt qa ON c.quiz_attempt_id = qa.id " +
                     "WHERE o.entreprise_id = ? AND c.statut = ? " +
                     "ORDER BY c.date_candidature DESC";
         
@@ -290,11 +307,12 @@ public class CandidatureDAO {
     public Candidature getCandidatureById(int id) {
         String sql = "SELECT c.*, " +
                     "a.nom as apprenant_nom, a.prenom as apprenant_prenom, a.email as apprenant_email, " +
-                    "o.titre as offre_titre, e.nom as entreprise_name " +
+                    "o.titre as offre_titre, e.nom as entreprise_name, qa.score as quiz_score " +
                     "FROM candidature c " +
                     "JOIN apprenant a ON c.apprenant_id = a.id " +
                     "JOIN offre_stage o ON c.offre_id = o.id " +
                     "JOIN entreprise e ON o.entreprise_id = e.id " +
+                    "LEFT JOIN quiz_attempt qa ON c.quiz_attempt_id = qa.id " +
                     "WHERE c.id = ?";
         
         try (Connection conn = DatabaseConnection.getConnection();
@@ -355,6 +373,21 @@ public class CandidatureDAO {
         c.setStatut(rs.getString("statut"));
         c.setDateCandidature(rs.getTimestamp("date_candidature"));
         c.setLettreMotivation(rs.getString("lettre_motivation"));
+        
+        // Quiz fields (nullable)
+        int quizAttemptId = rs.getInt("quiz_attempt_id");
+        if (!rs.wasNull()) {
+            c.setQuizAttemptId(quizAttemptId);
+        }
+        try {
+            double quizScore = rs.getDouble("quiz_score");
+            if (!rs.wasNull()) {
+                c.setQuizScore(quizScore);
+            }
+        } catch (SQLException e) {
+            // quiz_score might not be present in all queries
+        }
+        
         c.setDateReponse(rs.getTimestamp("date_reponse"));
         c.setCommentaireAdmin(rs.getString("commentaire_admin"));
         c.setOffreTitre(rs.getString("offre_titre"));

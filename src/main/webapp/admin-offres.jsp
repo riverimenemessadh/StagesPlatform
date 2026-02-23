@@ -1,5 +1,5 @@
-﻿<%@ page contentType="text/html;charset=UTF-8" language="java" %>
-<%@ page import="com.stages.model.*, java.util.*, java.text.SimpleDateFormat" %>
+<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@ page import="com.stages.model.*, com.stages.dao.*, java.util.*, java.text.SimpleDateFormat" %>
 <%
     String admin = (String) session.getAttribute("admin");
     if (admin == null) {
@@ -11,6 +11,9 @@
     Entreprise selectedEntreprise = (Entreprise) request.getAttribute("selectedEntreprise");
     List<OffreStage> offres = (List<OffreStage>) request.getAttribute("offres");
     SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
+    
+    // Initialize DAO for quiz data
+    QuizDAO quizDAO = new QuizDAO();
 %>
 <!DOCTYPE html>
 <html lang="fr">
@@ -147,6 +150,9 @@
                                 <div class="offer-card mb-lg">
                                     <div class="offer-header">
                                         <h4><%= offre.getTitre() %></h4>
+                                        <% if (offre.hasQuiz()) { %>
+                                            <span class="badge badge-warning">Quiz Requis</span>
+                                        <% } %>
                                     </div>
                                     <div class="entreprise-info-grid">
                                         <div>
@@ -173,6 +179,43 @@
                                             <p class="text-secondary"><%= offre.getDescription() %></p>
                                         </div>
                                     <% } %>
+                                    <% if (offre.hasQuiz()) {
+                                        List<QuizQuestion> questions = quizDAO.getQuestionsByQuizId(offre.getQuizId());
+                                    %>
+                                        <div class="mt-md quiz-display">
+                                            <strong>Quiz de Competences:</strong>
+                                            <p class="text-muted"><%= questions.size() %> questions - Score minimum: 75%</p>
+                                            <button type="button" class="btn btn-sm btn-secondary" onclick="toggleQuizQuestions(<%= offre.getId() %>)">
+                                                Voir les questions
+                                            </button>
+                                            <div id="quiz-<%= offre.getId() %>" class="quiz-questions-display" style="display: none;">
+                                                <% for (int i = 0; i < questions.size(); i++) {
+                                                    QuizQuestion q = questions.get(i); %>
+                                                    <div class="quiz-question-display">
+                                                        <p><strong>Q<%= (i + 1) %>:</strong> <%= q.getQuestionText() %></p>
+                                                        <ul class="quiz-options-list">
+                                                            <li <%= q.getCorrectAnswer().equals("a") ? "class='correct-option'" : "" %>>
+                                                                A) <%= q.getOptionA() %>
+                                                                <%= q.getCorrectAnswer().equals("a") ? "(Correct)" : "" %>
+                                                            </li>
+                                                            <li <%= q.getCorrectAnswer().equals("b") ? "class='correct-option'" : "" %>>
+                                                                B) <%= q.getOptionB() %>
+                                                                <%= q.getCorrectAnswer().equals("b") ? "(Correct)" : "" %>
+                                                            </li>
+                                                            <li <%= q.getCorrectAnswer().equals("c") ? "class='correct-option'" : "" %>>
+                                                                C) <%= q.getOptionC() %>
+                                                                <%= q.getCorrectAnswer().equals("c") ? "(Correct)" : "" %>
+                                                            </li>
+                                                            <li <%= q.getCorrectAnswer().equals("d") ? "class='correct-option'" : "" %>>
+                                                                D) <%= q.getOptionD() %>
+                                                                <%= q.getCorrectAnswer().equals("d") ? "(Correct)" : "" %>
+                                                            </li>
+                                                        </ul>
+                                                    </div>
+                                                <% } %>
+                                            </div>
+                                        </div>
+                                    <% } %>
                                 </div>
                             <% } %>
                         </div>
@@ -183,5 +226,16 @@
             </div>
         <% } %>
     </div>
+    
+    <script>
+        function toggleQuizQuestions(offreId) {
+            const quizDiv = document.getElementById('quiz-' + offreId);
+            if (quizDiv.style.display === 'none') {
+                quizDiv.style.display = 'block';
+            } else {
+                quizDiv.style.display = 'none';
+            }
+        }
+    </script>
 </body>
 </html>
