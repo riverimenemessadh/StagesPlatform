@@ -4,7 +4,7 @@
 
 Full-stack internship management platform connecting students, companies, and institutions — built with Java EE, following the MVC architecture end to end.
 
-![Demo](thumbnail.png)
+![Demo](demo.png)
 
 </div>
 
